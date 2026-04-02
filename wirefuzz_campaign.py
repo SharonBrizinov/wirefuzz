@@ -675,6 +675,8 @@ class CampaignState:
     updated: str = ""
     # Scan results: wtap_id -> packet count across all pcaps
     encap_scan: Dict[str, int] = field(default_factory=dict)
+    # Scan results: wtap_id -> list of pcap file paths containing that encap
+    encap_files: Dict[str, List[str]] = field(default_factory=dict)
     pcap_count: int = 0
     total_packets_scanned: int = 0
     # Per-encap state keyed by encap_id (as str for JSON compat)
@@ -760,8 +762,9 @@ def scan_pcaps(
         log.warn("No pcap files found — all encaps will be fuzzed with synthetic seeds")
         return
 
-    # Aggregate encap distribution across all files
+    # Aggregate encap distribution and file mapping across all files
     distribution: Dict[int, int] = {}
+    file_map: Dict[int, List[str]] = {}  # encap_id -> [file paths]
     total = 0
 
     for i, pf in enumerate(pcap_files, 1):
@@ -776,13 +779,18 @@ def scan_pcaps(
         for encap_id, count in per_file.items():
             distribution[encap_id] = distribution.get(encap_id, 0) + count
             total += count
+            # Track which files contain which encap types
+            if encap_id not in file_map:
+                file_map[encap_id] = []
+            file_map[encap_id].append(str(pf))
 
     state.total_packets_scanned = total
     # Store as str keys for JSON
     state.encap_scan = {str(k): v for k, v in
                         sorted(distribution.items(), key=lambda x: -x[1])}
+    state.encap_files = {str(k): v for k, v in file_map.items()}
 
-    log.ok(f"Scan complete: {total} packets across {len(distribution)} encap types")
+    log.ok(f"Scan complete: {total:,} packets across {len(distribution)} encap types")
 
     # Mark encaps that have seeds
     for encap_id_str, count in state.encap_scan.items():
@@ -804,12 +812,16 @@ def extract_corpus_for_encap(
     corpus_dir: Path,
     max_packets: int,
     log: CampaignLog,
+    pcap_files: Optional[List[Path]] = None,
 ) -> int:
     """Extract matching packets from pcaps into corpus_dir.
 
+    If pcap_files is given (from scan), only those files are read.
+    Otherwise falls back to scanning the entire pcap_dir.
     Extracts up to max_packets unique packets. Returns actual count written.
     """
-    pcap_files = find_pcap_files(pcap_dir)
+    if pcap_files is None:
+        pcap_files = find_pcap_files(pcap_dir)
     if not pcap_files:
         return 0
 
@@ -915,9 +927,18 @@ def fuzz_encap(
     # Extract seeds if we have pcaps and this encap has known seeds
     seed_count = 0
     if pcap_dir and es.seed_count > 0:
-        log.info(f"  Extracting seeds for {encap.name} ({es.seed_count} packets in scan)...")
+        # Use file list from scan to avoid re-scanning the entire pcap directory
+        known_files = state.encap_files.get(str(encap.id))
+        if known_files:
+            relevant_pcaps = [Path(f) for f in known_files if Path(f).exists()]
+            log.info(f"  Extracting seeds for {encap.name} "
+                     f"({es.seed_count} packets in scan, {len(relevant_pcaps)} file(s))...")
+        else:
+            relevant_pcaps = None
+            log.info(f"  Extracting seeds for {encap.name} ({es.seed_count} packets in scan)...")
         seed_count = extract_corpus_for_encap(
-            pcap_dir, encap, corpus_dir, state.max_extract_packets, log)
+            pcap_dir, encap, corpus_dir, state.max_extract_packets, log,
+            pcap_files=relevant_pcaps)
         es.seeds_extracted = seed_count
         log.info(f"  Extracted {seed_count} unique seed(s)")
 
