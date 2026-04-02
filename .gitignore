@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Hidden dirs
+.DS_Store
+.vscode/
+.idea/
+.claude/
+
+# Docs generation
+docs/generate_screenshots.py
+
+# Fuzzing runs
+wirefuzz_runs/

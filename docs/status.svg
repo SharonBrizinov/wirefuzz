@@ -1,0 +1,123 @@
+<svg class="rich-terminal" viewBox="0 0 1190 440.4" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+    @font-face {
+        font-family: "Fira Code";
+        src: local("FiraCode-Regular"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");
+        font-style: normal;
+        font-weight: 400;
+    }
+    @font-face {
+        font-family: "Fira Code";
+        src: local("FiraCode-Bold"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");
+        font-style: bold;
+        font-weight: 700;
+    }
+
+    .terminal-3271309157-matrix {
+        font-family: Fira Code, monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .terminal-3271309157-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .terminal-3271309157-r1 { fill: #c5c8c6 }
+.terminal-3271309157-r2 { fill: #c5c8c6;font-weight: bold }
+.terminal-3271309157-r3 { fill: #c5c8c6;font-style: italic; }
+.terminal-3271309157-r4 { fill: #68a0b3 }
+.terminal-3271309157-r5 { fill: #98a84b }
+.terminal-3271309157-r6 { fill: #868887 }
+    </style>
+
+    <defs>
+    <clipPath id="terminal-3271309157-clip-terminal">
+      <rect x="0" y="0" width="1170.1999999999998" height="389.4" />
+    </clipPath>
+    <clipPath id="terminal-3271309157-line-0">
+    <rect x="0" y="1.5" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-1">
+    <rect x="0" y="25.9" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-2">
+    <rect x="0" y="50.3" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-3">
+    <rect x="0" y="74.7" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-4">
+    <rect x="0" y="99.1" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-5">
+    <rect x="0" y="123.5" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-6">
+    <rect x="0" y="147.9" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-7">
+    <rect x="0" y="172.3" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-8">
+    <rect x="0" y="196.7" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-9">
+    <rect x="0" y="221.1" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-10">
+    <rect x="0" y="245.5" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-11">
+    <rect x="0" y="269.9" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-12">
+    <rect x="0" y="294.3" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-13">
+    <rect x="0" y="318.7" width="1171.2" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3271309157-line-14">
+    <rect x="0" y="343.1" width="1171.2" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1188" height="438.4" rx="8"/><text class="terminal-3271309157-title" fill="#c5c8c6" text-anchor="middle" x="594" y="27">wirefuzz</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#terminal-3271309157-clip-terminal)">
+    
+    <g class="terminal-3271309157-matrix">
+    <text class="terminal-3271309157-r1" x="1171.2" y="20" textLength="12.2" clip-path="url(#terminal-3271309157-line-0)">
+</text><text class="terminal-3271309157-r2" x="0" y="44.4" textLength="207.4" clip-path="url(#terminal-3271309157-line-1)">$&#160;wirefuzz&#160;status</text><text class="terminal-3271309157-r1" x="1171.2" y="44.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-1)">
+</text><text class="terminal-3271309157-r1" x="1171.2" y="68.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-2)">
+</text><text class="terminal-3271309157-r3" x="0" y="93.2" textLength="1171.2" clip-path="url(#terminal-3271309157-line-3)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Fuzz&#160;Runs&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="1171.2" y="93.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-3)">
+</text><text class="terminal-3271309157-r1" x="0" y="117.6" textLength="1171.2" clip-path="url(#terminal-3271309157-line-4)">┏━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓</text><text class="terminal-3271309157-r1" x="1171.2" y="117.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-4)">
+</text><text class="terminal-3271309157-r1" x="0" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="24.4" y="142" textLength="292.8" clip-path="url(#terminal-3271309157-line-5)">Run&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="329.4" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="353.8" y="142" textLength="85.4" clip-path="url(#terminal-3271309157-line-5)">Version</text><text class="terminal-3271309157-r1" x="451.4" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="475.8" y="142" textLength="207.4" clip-path="url(#terminal-3271309157-line-5)">Encap&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="719.8" y="142" textLength="73.2" clip-path="url(#terminal-3271309157-line-5)">Corpus</text><text class="terminal-3271309157-r1" x="805.2" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="829.6" y="142" textLength="85.4" clip-path="url(#terminal-3271309157-line-5)">Crashes</text><text class="terminal-3271309157-r1" x="927.2" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r2" x="951.6" y="142" textLength="195.2" clip-path="url(#terminal-3271309157-line-5)">Created&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="1159" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">┃</text><text class="terminal-3271309157-r1" x="1171.2" y="142" textLength="12.2" clip-path="url(#terminal-3271309157-line-5)">
+</text><text class="terminal-3271309157-r1" x="0" y="166.4" textLength="1171.2" clip-path="url(#terminal-3271309157-line-6)">┡━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩</text><text class="terminal-3271309157-r1" x="1171.2" y="166.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-6)">
+</text><text class="terminal-3271309157-r1" x="0" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r2" x="24.4" y="190.8" textLength="292.8" clip-path="url(#terminal-3271309157-line-7)">token_ring_2_master_202…</text><text class="terminal-3271309157-r1" x="329.4" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r1" x="353.8" y="190.8" textLength="85.4" clip-path="url(#terminal-3271309157-line-7)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r1" x="475.8" y="190.8" textLength="207.4" clip-path="url(#terminal-3271309157-line-7)">TOKEN_RING&#160;(2)&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r4" x="719.8" y="190.8" textLength="73.2" clip-path="url(#terminal-3271309157-line-7)">&#160;1,557</text><text class="terminal-3271309157-r1" x="805.2" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r5" x="902.8" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">0</text><text class="terminal-3271309157-r1" x="927.2" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r6" x="951.6" y="190.8" textLength="195.2" clip-path="url(#terminal-3271309157-line-7)">2026-04-02&#160;20:55</text><text class="terminal-3271309157-r1" x="1159" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="190.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-7)">
+</text><text class="terminal-3271309157-r1" x="0" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r2" x="24.4" y="215.2" textLength="292.8" clip-path="url(#terminal-3271309157-line-8)">null_15_master_20260402&#160;</text><text class="terminal-3271309157-r1" x="329.4" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r1" x="353.8" y="215.2" textLength="85.4" clip-path="url(#terminal-3271309157-line-8)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r1" x="475.8" y="215.2" textLength="207.4" clip-path="url(#terminal-3271309157-line-8)">NULL&#160;(15)&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r4" x="719.8" y="215.2" textLength="73.2" clip-path="url(#terminal-3271309157-line-8)">&#160;&#160;&#160;967</text><text class="terminal-3271309157-r1" x="805.2" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r5" x="902.8" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">0</text><text class="terminal-3271309157-r1" x="927.2" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r6" x="951.6" y="215.2" textLength="195.2" clip-path="url(#terminal-3271309157-line-8)">2026-04-02&#160;20:48</text><text class="terminal-3271309157-r1" x="1159" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="215.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-8)">
+</text><text class="terminal-3271309157-r1" x="0" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r2" x="24.4" y="239.6" textLength="292.8" clip-path="url(#terminal-3271309157-line-9)">mtp3_43_master_20260402&#160;</text><text class="terminal-3271309157-r1" x="329.4" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r1" x="353.8" y="239.6" textLength="85.4" clip-path="url(#terminal-3271309157-line-9)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r1" x="475.8" y="239.6" textLength="207.4" clip-path="url(#terminal-3271309157-line-9)">MTP3&#160;(43)&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r4" x="719.8" y="239.6" textLength="73.2" clip-path="url(#terminal-3271309157-line-9)">&#160;&#160;&#160;919</text><text class="terminal-3271309157-r1" x="805.2" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r5" x="902.8" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">0</text><text class="terminal-3271309157-r1" x="927.2" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r6" x="951.6" y="239.6" textLength="195.2" clip-path="url(#terminal-3271309157-line-9)">2026-04-02&#160;20:40</text><text class="terminal-3271309157-r1" x="1159" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="239.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-9)">
+</text><text class="terminal-3271309157-r1" x="0" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r2" x="24.4" y="264" textLength="292.8" clip-path="url(#terminal-3271309157-line-10)">docsis_33_master_202604…</text><text class="terminal-3271309157-r1" x="329.4" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r1" x="353.8" y="264" textLength="85.4" clip-path="url(#terminal-3271309157-line-10)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r1" x="475.8" y="264" textLength="207.4" clip-path="url(#terminal-3271309157-line-10)">DOCSIS&#160;(33)&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r4" x="719.8" y="264" textLength="73.2" clip-path="url(#terminal-3271309157-line-10)">&#160;1,776</text><text class="terminal-3271309157-r1" x="805.2" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r5" x="902.8" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">0</text><text class="terminal-3271309157-r1" x="927.2" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r6" x="951.6" y="264" textLength="195.2" clip-path="url(#terminal-3271309157-line-10)">2026-04-02&#160;20:03</text><text class="terminal-3271309157-r1" x="1159" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="264" textLength="12.2" clip-path="url(#terminal-3271309157-line-10)">
+</text><text class="terminal-3271309157-r1" x="0" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r2" x="24.4" y="288.4" textLength="292.8" clip-path="url(#terminal-3271309157-line-11)">dbus_146_master_20260402</text><text class="terminal-3271309157-r1" x="329.4" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r1" x="353.8" y="288.4" textLength="85.4" clip-path="url(#terminal-3271309157-line-11)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r1" x="475.8" y="288.4" textLength="207.4" clip-path="url(#terminal-3271309157-line-11)">DBUS&#160;(146)&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r4" x="719.8" y="288.4" textLength="73.2" clip-path="url(#terminal-3271309157-line-11)">&#160;&#160;&#160;&#160;82</text><text class="terminal-3271309157-r1" x="805.2" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r5" x="902.8" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">0</text><text class="terminal-3271309157-r1" x="927.2" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r6" x="951.6" y="288.4" textLength="195.2" clip-path="url(#terminal-3271309157-line-11)">2026-04-02&#160;19:47</text><text class="terminal-3271309157-r1" x="1159" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="288.4" textLength="12.2" clip-path="url(#terminal-3271309157-line-11)">
+</text><text class="terminal-3271309157-r1" x="0" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r2" x="24.4" y="312.8" textLength="292.8" clip-path="url(#terminal-3271309157-line-12)">bluetooth_h4_41_master_…</text><text class="terminal-3271309157-r1" x="329.4" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r1" x="353.8" y="312.8" textLength="85.4" clip-path="url(#terminal-3271309157-line-12)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r1" x="475.8" y="312.8" textLength="207.4" clip-path="url(#terminal-3271309157-line-12)">BLUETOOTH_H4&#160;(41)</text><text class="terminal-3271309157-r1" x="695.4" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r4" x="719.8" y="312.8" textLength="73.2" clip-path="url(#terminal-3271309157-line-12)">&#160;1,577</text><text class="terminal-3271309157-r1" x="805.2" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r5" x="902.8" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">0</text><text class="terminal-3271309157-r1" x="927.2" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r6" x="951.6" y="312.8" textLength="195.2" clip-path="url(#terminal-3271309157-line-12)">2026-04-02&#160;20:14</text><text class="terminal-3271309157-r1" x="1159" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="312.8" textLength="12.2" clip-path="url(#terminal-3271309157-line-12)">
+</text><text class="terminal-3271309157-r1" x="0" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r2" x="24.4" y="337.2" textLength="292.8" clip-path="url(#terminal-3271309157-line-13)">ax25_148_master_20260402</text><text class="terminal-3271309157-r1" x="329.4" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r1" x="353.8" y="337.2" textLength="85.4" clip-path="url(#terminal-3271309157-line-13)">master&#160;</text><text class="terminal-3271309157-r1" x="451.4" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r1" x="475.8" y="337.2" textLength="207.4" clip-path="url(#terminal-3271309157-line-13)">AX25&#160;(148)&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3271309157-r1" x="695.4" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r4" x="719.8" y="337.2" textLength="73.2" clip-path="url(#terminal-3271309157-line-13)">&#160;&#160;&#160;521</text><text class="terminal-3271309157-r1" x="805.2" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r5" x="902.8" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">0</text><text class="terminal-3271309157-r1" x="927.2" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r6" x="951.6" y="337.2" textLength="195.2" clip-path="url(#terminal-3271309157-line-13)">2026-04-02&#160;20:33</text><text class="terminal-3271309157-r1" x="1159" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">│</text><text class="terminal-3271309157-r1" x="1171.2" y="337.2" textLength="12.2" clip-path="url(#terminal-3271309157-line-13)">
+</text><text class="terminal-3271309157-r1" x="0" y="361.6" textLength="1171.2" clip-path="url(#terminal-3271309157-line-14)">└──────────────────────────┴─────────┴───────────────────┴────────┴─────────┴──────────────────┘</text><text class="terminal-3271309157-r1" x="1171.2" y="361.6" textLength="12.2" clip-path="url(#terminal-3271309157-line-14)">
+</text><text class="terminal-3271309157-r1" x="1171.2" y="386" textLength="12.2" clip-path="url(#terminal-3271309157-line-15)">
+</text>
+    </g>
+    </g>
+</svg>
