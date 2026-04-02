@@ -4,7 +4,7 @@
 Iterates over every WTAP encapsulation type (1-227), fuzzes each for a
 configurable duration with configurable parallelism, and tracks progress
 in a persistent state file so the campaign can be resumed after any
-interruption.
+interruption.  Includes a built-in web dashboard for live monitoring.
 
 Usage:
     python wirefuzz_campaign.py /path/to/pcaps -V master
@@ -18,10 +18,13 @@ empty (synthetic) corpus.
 """
 
 import argparse
+import base64
 import json
 import sys
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -49,7 +52,6 @@ from wirefuzz.corpus import (
 from wirefuzz.docker import build_image, check_docker, image_exists
 from wirefuzz.encaps import ENCAP_REGISTRY, EncapType, get_encap
 from wirefuzz.fuzzer import start_fuzz_session, FuzzSession
-from wirefuzz_campaign.dashboard import start_dashboard
 
 # ---------------------------------------------------------------------------
 # Constants

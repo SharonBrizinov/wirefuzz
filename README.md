@@ -311,9 +311,6 @@ python wirefuzz_campaign.py /data/pcaps -V master -w 60 -d 60m -o campaign_run
 # Resume after interruption
 python wirefuzz_campaign.py --resume -o campaign_run
 
-# Or run as a module
-python -m wirefuzz_campaign /data/pcaps -V v4.6.4 -w 32 -d 2h
-
 # Fuzz only a range of encap IDs
 python wirefuzz_campaign.py /data/pcaps -V master --encap-range 1-50
 ```
@@ -374,10 +371,7 @@ wirefuzz/
   config.py            Configuration defaults
   exceptions.py        Typed exception hierarchy
 
-wirefuzz_campaign/
-  campaign.py          Full-encap campaign runner with persistent state
-  dashboard.py         Zero-dependency web dashboard (HTML SPA + JSON API)
-  __main__.py          python -m wirefuzz_campaign entry point
+wirefuzz_campaign.py   Full-encap campaign runner with web dashboard, persistent state
 
 docker/
   fuzzshark_master.c   fuzzshark variant for Wireshark master / v4.7+
