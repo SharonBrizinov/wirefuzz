@@ -201,8 +201,11 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
       </select>
       <select id="crashFilter" onchange="renderTable()">
         <option value="">All</option>
-        <option value="crashes">With crashes only</option>
-        <option value="seeds">With seeds only</option>
+        <option value="crashes">With crashes</option>
+        <option value="timeouts">With timeouts</option>
+        <option value="ooms">With OOMs</option>
+        <option value="any_issue">Any crash/TO/OOM</option>
+        <option value="seeds">With seeds</option>
       </select>
     </div>
     <div style="max-height:600px;overflow-y:auto">
@@ -211,13 +214,16 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
           <th data-col="encap_id" data-type="num">ID</th>
           <th data-col="encap_name">Name</th>
           <th data-col="status">Status</th>
-          <th data-col="seed_count" data-type="num">Seeds</th>
+          <th data-col="seed_count" data-type="num">Scan</th>
+          <th data-col="seeds_extracted" data-type="num">Extracted</th>
+          <th data-col="seeds_minimized" data-type="num">Minimized</th>
           <th data-col="corpus_count" data-type="num">Corpus</th>
           <th data-col="crashes" data-type="num">Crashes</th>
+          <th data-col="timeouts" data-type="num">Timeout</th>
+          <th data-col="ooms" data-type="num">OOM</th>
           <th data-col="total_execs" data-type="num">Execs</th>
-          <th data-col="coverage" data-type="num">Coverage</th>
+          <th data-col="coverage" data-type="num">Cov</th>
           <th data-col="elapsed_secs" data-type="num">Elapsed</th>
-          <th data-col="error">Error</th>
         </tr></thead>
         <tbody id="encapBody"></tbody>
       </table>
@@ -299,10 +305,12 @@ function renderProgress() {
 function renderCards() {
   const enc = Object.values(state.encaps || {});
   const counts = {done:0, running:0, failed:0, seeded:0, pending:0, skipped:0};
-  let totalCrashes = 0, totalExecs = 0, totalCorpus = 0;
+  let totalCrashes = 0, totalTimeouts = 0, totalOoms = 0, totalExecs = 0, totalCorpus = 0;
   enc.forEach(e => {
     counts[e.status] = (counts[e.status]||0) + 1;
     totalCrashes += e.crashes || 0;
+    totalTimeouts += e.timeouts || 0;
+    totalOoms += e.ooms || 0;
     totalExecs += e.total_execs || 0;
     totalCorpus += e.corpus_count || 0;
   });
@@ -313,11 +321,11 @@ function renderCards() {
     {label:'Seeded', value:counts.seeded, cls:'seeded'},
     {label:'Pending', value:counts.pending, cls:''},
     {label:'Failed', value:counts.failed, cls:'crashes'},
-    {label:'Total Crashes', value:totalCrashes, cls:'crashes'},
+    {label:'Crashes', value:totalCrashes, cls:'crashes'},
+    {label:'Timeouts', value:totalTimeouts, cls:'crashes'},
+    {label:'OOMs', value:totalOoms, cls:'crashes'},
     {label:'Total Execs', value:totalExecs.toLocaleString(), cls:'progress'},
     {label:'Total Corpus', value:totalCorpus.toLocaleString(), cls:''},
-    {label:'Scanned Pcaps', value:(state.pcap_count||0).toLocaleString(), cls:''},
-    {label:'Packets Scanned', value:(state.total_packets_scanned||0).toLocaleString(), cls:''},
   ];
   document.getElementById('statCards').innerHTML = cards.map(c =>
     `<div class="stat-card ${c.cls}"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`
@@ -373,6 +381,9 @@ function renderTable() {
     if (search && !e.encap_name.toLowerCase().includes(search) && !String(e.encap_id).includes(search)) return false;
     if (statusF && e.status !== statusF) return false;
     if (crashF === 'crashes' && !(e.crashes > 0)) return false;
+    if (crashF === 'timeouts' && !(e.timeouts > 0)) return false;
+    if (crashF === 'ooms' && !(e.ooms > 0)) return false;
+    if (crashF === 'any_issue' && !((e.crashes||0)+(e.timeouts||0)+(e.ooms||0) > 0)) return false;
     if (crashF === 'seeds' && !(e.seed_count > 0)) return false;
     return true;
   });
@@ -391,21 +402,33 @@ function renderTable() {
     if (th.dataset.col === sortCol) th.classList.add('sorted-' + sortDir);
   });
 
+  const now = Date.now();
   document.getElementById('encapBody').innerHTML = rows.map(e => {
-    const elapsed = e.elapsed_secs > 0 ? formatElapsed(e.elapsed_secs) : '-';
+    let elapsed = '-';
+    if (e.status === 'running' && e.started_at) {
+      const startMs = new Date(e.started_at).getTime();
+      if (startMs > 0) elapsed = formatElapsed(Math.floor((now - startMs) / 1000));
+    } else if (e.elapsed_secs > 0) {
+      elapsed = formatElapsed(e.elapsed_secs);
+    }
     const crashBadge = e.crashes > 0 ? `<span class="badge red">${e.crashes}</span>` : '-';
-    const errText = e.error ? `<span title="${esc(e.error)}">${esc(e.error.slice(0,40))}...</span>` : '';
+    const toBadge = e.timeouts > 0 ? `<span class="badge red">${e.timeouts}</span>` : '-';
+    const oomBadge = e.ooms > 0 ? `<span class="badge red">${e.ooms}</span>` : '-';
+    const n = v => v > 0 ? v.toLocaleString() : '-';
     return `<tr>
       <td>${e.encap_id}</td>
       <td><strong>${esc(e.encap_name)}</strong></td>
       <td><span class="status ${e.status}">${e.status}</span></td>
-      <td>${e.seed_count > 0 ? e.seed_count.toLocaleString() : '-'}</td>
-      <td>${e.corpus_count > 0 ? e.corpus_count.toLocaleString() : '-'}</td>
+      <td>${n(e.seed_count)}</td>
+      <td>${n(e.seeds_extracted)}</td>
+      <td>${n(e.seeds_minimized)}</td>
+      <td>${n(e.corpus_count)}</td>
       <td>${crashBadge}</td>
-      <td>${e.total_execs > 0 ? e.total_execs.toLocaleString() : '-'}</td>
-      <td>${e.coverage > 0 ? e.coverage.toLocaleString() : '-'}</td>
+      <td>${toBadge}</td>
+      <td>${oomBadge}</td>
+      <td>${n(e.total_execs)}</td>
+      <td>${n(e.coverage)}</td>
       <td>${elapsed}</td>
-      <td>${errText}</td>
     </tr>`;
   }).join('');
 }
@@ -617,12 +640,18 @@ class EncapState:
     encap_id: int
     encap_name: str
     status: str = "pending"  # pending | seeded | running | done | failed | skipped
-    seed_count: int = 0
+    seed_count: int = 0          # from scan (categorization count)
+    seeds_extracted: int = 0     # unique packets extracted from pcaps (pre-minimization)
+    seeds_minimized: int = 0     # after libfuzzer -merge=1 minimization
     run_dir: str = ""
     crashes: int = 0
+    timeouts: int = 0
+    ooms: int = 0
     corpus_count: int = 0
     total_execs: int = 0
     coverage: int = 0
+    exec_per_sec: int = 0
+    peak_rss_mb: int = 0
     started_at: str = ""
     finished_at: str = ""
     elapsed_secs: int = 0
@@ -808,13 +837,39 @@ def extract_corpus_for_encap(
 # Post-run stats collection
 # ---------------------------------------------------------------------------
 def _collect_post_run_stats(run_dir: Path, es: EncapState):
-    """Parse session log and count crash/corpus files after a run."""
+    """Parse session log, run.json, and count crash/corpus files after a run."""
+    import re as _re
     from wirefuzz.monitor import FuzzStats, parse_fuzzer_line
 
-    # Count files
+    # Read run.json for minimization stats
+    run_json = run_dir / "run.json"
+    if run_json.exists():
+        try:
+            meta = json.loads(run_json.read_text())
+            es.seeds_extracted = meta.get("samples_before_min", 0)
+            es.seeds_minimized = meta.get("samples_after_min", 0)
+        except Exception:
+            pass
+
+    # Count crash files by type (crash-*, timeout-*, oom-*)
     crashes_dir = run_dir / "crashes"
     if crashes_dir.exists():
-        es.crashes = sum(1 for f in crashes_dir.iterdir() if f.is_file())
+        for f in crashes_dir.iterdir():
+            if not f.is_file():
+                continue
+            name = f.name.lower()
+            if name.startswith("crash-"):
+                es.crashes += 1
+            elif name.startswith("timeout-"):
+                es.timeouts += 1
+            elif name.startswith("oom-"):
+                es.ooms += 1
+            elif name.startswith("slow-unit-"):
+                es.timeouts += 1
+            elif name.startswith("leak-"):
+                es.crashes += 1
+            else:
+                es.crashes += 1
 
     corpus_dir = run_dir / "corpus"
     if corpus_dir.exists():
@@ -829,6 +884,8 @@ def _collect_post_run_stats(run_dir: Path, es: EncapState):
                 parse_fuzzer_line(line, stats)
             es.total_execs = stats.total_execs
             es.coverage = stats.coverage
+            es.exec_per_sec = stats.exec_per_sec
+            es.peak_rss_mb = stats.peak_rss_mb
         except Exception:
             pass
 
@@ -858,15 +915,21 @@ def fuzz_encap(
     # Extract seeds if we have pcaps and this encap has known seeds
     seed_count = 0
     if pcap_dir and es.seed_count > 0:
-        log.info(f"  Extracting seeds for {encap.name} ({es.seed_count} packets available)...")
+        log.info(f"  Extracting seeds for {encap.name} ({es.seed_count} packets in scan)...")
         seed_count = extract_corpus_for_encap(
             pcap_dir, encap, corpus_dir, state.max_extract_packets, log)
+        es.seeds_extracted = seed_count
         log.info(f"  Extracted {seed_count} unique seed(s)")
 
     # Always ensure at least one minimal seed
     if not any(corpus_dir.iterdir()):
         (corpus_dir / "seed_minimal").write_bytes(b"\x00" * 4)
         seed_count = 1
+        es.seeds_extracted = 1
+
+    # Persist extraction stats immediately so the dashboard can show them
+    state.set_encap_state(es)
+    state.save(campaign_dir / STATE_FILENAME)
 
     output_base = Path(state.campaign_dir) / "runs"
     output_base.mkdir(parents=True, exist_ok=True)
@@ -987,13 +1050,12 @@ def build_fuzz_queue(
     state: CampaignState,
     encap_range: Optional[Tuple[int, int]] = None,
 ) -> List[int]:
-    """Return list of encap IDs to fuzz, ordered: seeded first, then pending.
+    """Return list of encap IDs to fuzz in sequential order (1-227).
 
     Skips encaps that are already done/failed/skipped/running.
     If encap_range is given, only IDs within [lo, hi] inclusive are considered.
     """
-    seeded = []
-    pending = []
+    queue = []
 
     max_id = max((e.id for e in ENCAP_REGISTRY.values()), default=0)
     lo = encap_range[0] if encap_range else 0
@@ -1009,15 +1071,8 @@ def build_fuzz_queue(
         if es.status in ("done", "failed", "skipped", "running"):
             continue
 
-        if es.status == "seeded" and es.seed_count > 0:
-            seeded.append((encap_id, es.seed_count))
-        else:
-            pending.append(encap_id)
+        queue.append(encap_id)
 
-    # Sort seeded by seed count (most seeds first)
-    seeded.sort(key=lambda x: -x[1])
-
-    queue = [eid for eid, _ in seeded] + pending
     return queue
 
 

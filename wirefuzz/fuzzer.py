@@ -50,7 +50,9 @@ def _merge_corpus_pcapng(run_dir: Path, encap: EncapType, console: Console):
     if not payloads:
         return
 
-    out_path = run_dir / "corpus.pcapng"
+    name = encap.name.lower().replace(" ", "_").replace("/", "_")
+    out_name = f"wtap_{encap.id}_{name}_merged.pcapng"
+    out_path = run_dir / out_name
     written = write_pcapng(payloads, encap.id, out_path)
     console.print(f"  [green]Saved {written} packets to {out_path}[/green]")
 
