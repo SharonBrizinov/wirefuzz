@@ -84,6 +84,7 @@ Shows the complete flow: seed extraction from pcaps, deduplication, corpus minim
   - [encaps](#encaps)
   - [clean](#clean)
 - [DLT vs WTAP Encap IDs](#dlt-vs-wtap-encap-ids)
+- [Campaign Mode](#campaign-mode)
 - [Architecture](#architecture)
 - [Run Directory Layout](#run-directory-layout)
 - [Docker Internals](#docker-internals)
@@ -299,6 +300,61 @@ pcap/pcapng files store a **DLT** (Data Link Type) number to identify the link-l
 
 wirefuzz always uses **WTAP encap IDs** for the `-e` flag and in `wirefuzz encaps` output. The DLT-to-WTAP conversion happens automatically when reading pcap files, based on the mapping from Wireshark's `wiretap/pcap-common.c`.
 
+## Campaign Mode
+
+The campaign runner automates fuzzing across all 228 WTAP encapsulation types. It scans your pcap collection, builds an encap distribution, extracts per-encap seed corpora, and fuzzes each type sequentially with full state persistence and a live web dashboard.
+
+```bash
+# New campaign — scan pcaps, then fuzz every encap type
+python wirefuzz_campaign.py /data/pcaps -V master -w 60 -d 60m -o campaign_run
+
+# Resume after interruption
+python wirefuzz_campaign.py --resume -o campaign_run
+
+# Or run as a module
+python -m wirefuzz_campaign /data/pcaps -V v4.6.4 -w 32 -d 2h
+
+# Fuzz only a range of encap IDs
+python wirefuzz_campaign.py /data/pcaps -V master --encap-range 1-50
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-V, --version` | Wireshark version | required |
+| `-w, --workers` | libfuzzer fork workers per encap | 60 |
+| `-d, --duration` | Duration per encap (`60m`, `2h`, `3600s`) | `60m` |
+| `-o, --output` | Campaign output directory | `wirefuzz_campaign/` |
+| `--resume` | Resume a previous campaign | false |
+| `--max-scan-packets` | Max packets to read during pcap scan phase | 350,000 |
+| `--max-extract-packets` | Max packets to extract per encap for seeds | 350,000 |
+| `--encap-range` | Encap ID range to fuzz (e.g. `0-50`, `100-227`) | all |
+| `--no-dashboard` | Disable the web dashboard | false |
+| `--dashboard-port` | Dashboard HTTP port | 56789 |
+| `--dashboard-password` | Dashboard password | `helloworld` |
+
+### Campaign phases
+
+1. **Scan** — reads up to 1,000 packets from each pcap file (up to 350K total) to categorize which encap types are present and how many packets of each.
+2. **Seed extraction** — for each encap type with matching packets, extracts up to 350K unique raw payloads as seed corpus.
+3. **Fuzz** — iterates through all encap types (seeded first, then synthetic). Each runs for the configured duration with full ASAN + UBSan instrumentation.
+
+State is persisted to `campaign_state.json` after every encap completes, so `--resume` picks up exactly where it left off.
+
+### Web dashboard
+
+The campaign includes a built-in web dashboard (enabled by default) that runs on port 56789 with password protection. It provides:
+
+- Real-time campaign progress bar and completion stats
+- Per-encap status table (sortable, filterable, searchable) with seeds, corpus, crashes, execs, coverage, and elapsed time
+- Crash summary with per-encap breakdown
+- Scan distribution visualization showing which encap types are most common in your pcaps
+- Campaign configuration display
+- Live campaign log tail (last 200 lines)
+- Auto-refresh every 120 seconds (configurable)
+- Mobile-responsive layout
+
+Access it at `http://<host>:56789/` with username anything and the configured password.
+
 ## Architecture
 
 ```
@@ -318,8 +374,15 @@ wirefuzz/
   config.py            Configuration defaults
   exceptions.py        Typed exception hierarchy
 
+wirefuzz_campaign/
+  campaign.py          Full-encap campaign runner with persistent state
+  dashboard.py         Zero-dependency web dashboard (HTML SPA + JSON API)
+  __main__.py          python -m wirefuzz_campaign entry point
+
 docker/
-  fuzzshark.c          Patched fuzzshark with WIREFUZZ_ENCAP env var support
+  fuzzshark_master.c   fuzzshark variant for Wireshark master / v4.7+
+  fuzzshark_v4.6.c     fuzzshark variant for Wireshark v4.6.x
+  fuzzshark_v4.4.c     fuzzshark variant for Wireshark v4.4.x and earlier
   entrypoint.sh        Container entrypoint (fuzz, build, minimize, reproduce)
   patch_ninja.py       aarch64 UBSan linker workaround
 ```
@@ -350,7 +413,7 @@ The Dockerfile builds a single image tagged `wirefuzz:<version>`:
 - **Base**: Ubuntu 24.04
 - **Compiler**: clang + lld with libfuzzer, ASAN, UBSan
 - **Targets**: only `fuzzshark`, `editcap`, and `tshark` (not the GUI)
-- **Encap patch**: `docker/fuzzshark.c` replaces upstream to add `WIREFUZZ_ENCAP` env var support, allowing a specific dissector to be targeted without recompilation
+- **Encap patch**: version-specific `fuzzshark_*.c` variants replace the upstream source to add `WIREFUZZ_ENCAP` env var support. The build automatically selects the right variant (`master` for v4.7+, `v4.6` for v4.6.x, `v4.4` for v4.4.x and earlier) based on the target version, handling API differences in struct layouts, function signatures, and initialization across Wireshark releases
 
 Container environment variables:
 
