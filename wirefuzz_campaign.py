@@ -916,7 +916,6 @@ def fuzz_encap(
     """Run a single fuzz session for one encap type. Updates state in-place."""
     es = state.get_encap_state(encap.id)
     es.status = "running"
-    es.started_at = datetime.now().isoformat()
     state.set_encap_state(es)
     state.save(campaign_dir / STATE_FILENAME)
 
@@ -954,6 +953,11 @@ def fuzz_encap(
 
     output_base = Path(state.campaign_dir) / "runs"
     output_base.mkdir(parents=True, exist_ok=True)
+
+    # Set started_at right before the actual fuzz session (not including extraction time)
+    es.started_at = datetime.now().isoformat()
+    state.set_encap_state(es)
+    state.save(campaign_dir / STATE_FILENAME)
 
     try:
         session = start_fuzz_session(

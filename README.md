@@ -2,6 +2,10 @@
 
 A fuzzing framework for Wireshark's 1600+ protocol dissectors. Builds an instrumented `fuzzshark` binary inside Docker with clang, libfuzzer, ASAN, and UBSan, then orchestrates fuzzing campaigns to find memory safety bugs like heap-buffer-overflows, use-after-free, null-pointer dereferences, and undefined behavior.
 
+
+<p align="center"><img src="docs/wirefuzz-campaign.png" alt="wirefuzz fuzz campaign"></p>
+
+
 ## Why wirefuzz
 
 Wireshark ships over 1600+ protocol dissectors, each parsing a different wire format. Every dissector is reachable from a captured packet, but only if the packet's **link-layer encapsulation type** matches what the dissector expects. A single pcap file typically contains packets of only one or two encap types, so fuzzing "all of Wireshark" with a random pcap misses most of the attack surface.
