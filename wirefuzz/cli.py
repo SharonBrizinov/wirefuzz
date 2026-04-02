@@ -184,12 +184,14 @@ def encaps_cmd(ctx, show_all):
 @click.option("--resume", "resume_dir", default=None,
               type=click.Path(exists=True),
               help="Resume a previous run directory.")
+@click.option("--auto-encap", is_flag=True,
+              help="Auto-detect encap type from pcap majority (requires -p).")
 @click.option("--no-cache", is_flag=True,
               help="Force rebuild Docker image before fuzzing.")
 @click.pass_context
 def fuzz(ctx, ws_version, pcap_path, encap_str, workers, output_dir,
          timeout, rss_limit, max_len, dict_path, duration,
-         mount_source, resume_dir, no_cache):
+         mount_source, resume_dir, auto_encap, no_cache):
     """Start a fuzzing session.
 
     Extracts packets matching the target encap type from seed PCAPs,
@@ -200,6 +202,7 @@ def fuzz(ctx, ws_version, pcap_path, encap_str, workers, output_dir,
     \b
     Examples:
       wirefuzz fuzz -V master -p ./pcaps/ -e 1 -w 16
+      wirefuzz fuzz -V master -p ./pcaps/ --auto-encap
       wirefuzz fuzz --resume ./wirefuzz_runs/ethernet_1_master_20260401_143022/
       wirefuzz fuzz                          # fully interactive
     """
@@ -243,6 +246,11 @@ def fuzz(ctx, ws_version, pcap_path, encap_str, workers, output_dir,
                 console.print("[dim]Use 'wirefuzz encaps' to list available types.[/dim]")
                 sys.exit(1)
         else:
+            if auto_encap and not pcap_path:
+                console.print("[red]Error:[/red] --auto-encap requires -p/--pcap")
+                sys.exit(1)
+
+            dist = None
             # If pcap(s) were provided, probe them first and show what's inside
             if pcap_path:
                 from wirefuzz.corpus import find_pcap_files, probe_encaps
@@ -274,7 +282,25 @@ def fuzz(ctx, ws_version, pcap_path, encap_str, workers, output_dir,
                         console.print(table)
                         console.print()
 
-            encap = pick_encap_interactive(console=console)
+            # Auto-detect: pick the majority encap from the probe
+            if auto_encap and dist:
+                top_wtap_id = next(iter(dist))  # first key = highest count
+                encap = ENCAP_REGISTRY.get(top_wtap_id)
+                if encap is None:
+                    console.print(f"[red]Error:[/red] Auto-detected encap WTAP {top_wtap_id} not in registry")
+                    sys.exit(1)
+                top_count = dist[top_wtap_id]
+                total_probed = sum(dist.values())
+                pct = top_count / total_probed * 100
+                console.print(
+                    f"  [bold green]Auto-detected:[/bold green] {encap.name} (WTAP {encap.id}) "
+                    f"— {top_count}/{total_probed} packets ({pct:.0f}%)"
+                )
+            elif auto_encap and not dist:
+                console.print("[red]Error:[/red] --auto-encap: no packets found in pcap files")
+                sys.exit(1)
+            else:
+                encap = pick_encap_interactive(console=console)
 
         console.print(f"\n  Encap: [bold]{encap.name}[/bold] ({encap.id}) - {encap.full_name}")
 

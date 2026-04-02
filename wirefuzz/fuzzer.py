@@ -25,6 +25,36 @@ class FuzzSession:
     started: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
+def _merge_corpus_pcapng(run_dir: Path, encap: EncapType, console: Console):
+    """Merge all corpus files into a single pcapng in the run directory."""
+    from wirefuzz.corpus import write_pcapng
+
+    corpus_dir = run_dir / "corpus"
+    if not corpus_dir.exists():
+        return
+
+    files = sorted(f for f in corpus_dir.iterdir() if f.is_file())
+    if not files:
+        return
+
+    console.print(f"  Merging {len(files)} corpus files into pcapng...")
+    payloads = []
+    for f in files:
+        try:
+            data = f.read_bytes()
+            if data:
+                payloads.append(data)
+        except OSError:
+            continue
+
+    if not payloads:
+        return
+
+    out_path = run_dir / "corpus.pcapng"
+    written = write_pcapng(payloads, encap.id, out_path)
+    console.print(f"  [green]Saved {written} packets to {out_path}[/green]")
+
+
 def start_fuzz_session(
     version: str,
     encap: EncapType,
@@ -245,6 +275,10 @@ def start_fuzz_session(
         console.print("[bold]  Output paths[/bold]")
         console.print(f"    Run dir:   {run_dir}")
         console.print(f"    Corpus:    {run_dir / 'corpus'}")
+        pcapng_path = run_dir / "corpus.pcapng"
+        if pcapng_path.exists():
+            size_mb = pcapng_path.stat().st_size / (1024 * 1024)
+            console.print(f"    Pcapng:    {pcapng_path} ({size_mb:.1f} MB)")
         console.print(f"    Crashes:   {run_dir / 'crashes'}")
         console.print(f"    Logs:      {run_dir / 'logs'}")
         console.print()
@@ -288,9 +322,12 @@ def start_fuzz_session(
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted. Stopping container...[/yellow]")
         stop_container(container_name, console=console)
+        _merge_corpus_pcapng(run_dir, encap, console)
         _print_summary()
         raise
 
+    _merge_corpus_pcapng(run_dir, encap, console)
+    _print_summary()
     return session
 
 

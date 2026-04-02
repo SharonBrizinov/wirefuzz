@@ -143,8 +143,10 @@ case "$COMMAND" in
         log "  Command: $FUZZSHARK ${FUZZ_ARGS[*]} /corpus/"
         log "---"
 
-        # Run fuzzshark with libfuzzer, tee output to log file
-        exec "$FUZZSHARK" "${FUZZ_ARGS[@]}" /corpus/ 2>&1 | tee /logs/fuzz.log
+        # Run fuzzshark with libfuzzer, tee output to log file.
+        # WS_LOG_LEVEL=critical suppresses the benign "fr_data" assertion
+        # warning that Wireshark's frame dissector emits via g_warning().
+        exec env WS_LOG_LEVEL=critical "$FUZZSHARK" "${FUZZ_ARGS[@]}" /corpus/ 2>&1 | tee /logs/fuzz.log
         ;;
 
     minimize)
