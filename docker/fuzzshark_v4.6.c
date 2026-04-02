@@ -1,6 +1,7 @@
 /* fuzzshark.c
  *
  * Fuzzer variant of Wireshark for oss-fuzz
+ * wirefuzz version — Wireshark v4.6.x
  *
  * Wireshark - Network traffic analyzer
  * By Gerald Combs <gerald@wireshark.org>
@@ -24,25 +25,6 @@
 #include <wsutil/cmdarg_err.h>
 #include <ui/failure_message.h>
 #include <wsutil/filesystem.h>
-#if __has_include(<app/application_flavor.h>)
-#include <app/application_flavor.h>
-#define HAS_APPLICATION_FLAVOR 1
-#endif
-
-/*
- * Detect Wireshark API generation from VERSION_MAJOR/VERSION_MINOR
- * (defined in config.h).  Three tiers:
- *   HAS_APPLICATION_FLAVOR  – master / dev builds (app/application_flavor.h present)
- *   WS_API_V46              – v4.6.x  (1-arg ws_log_init, 7-member provider_funcs)
- *   neither                 – v4.4.x and earlier (2-arg ws_log_init, 4-member provider_funcs)
- */
-#if !defined(HAS_APPLICATION_FLAVOR)
-  #if defined(VERSION_MAJOR) && defined(VERSION_MINOR)
-    #if VERSION_MAJOR > 4 || (VERSION_MAJOR == 4 && VERSION_MINOR >= 6)
-      #define WS_API_V46 1
-    #endif
-  #endif
-#endif
 #include <wsutil/privileges.h>
 #include <wsutil/clopts_common.h>
 #include <wsutil/ws_getopt.h>
@@ -59,6 +41,7 @@
 #include <epan/print.h>
 #include <epan/epan_dissect.h>
 #include <epan/disabled_protos.h>
+#include <epan/tvbuff.h>
 
 #ifdef HAVE_PLUGINS
 #include <wsutil/plugins.h>
@@ -107,20 +90,9 @@ fuzzshark_epan_new(void)
 		NULL,
 		NULL,
 		NULL,
-#if defined(HAS_APPLICATION_FLAVOR)
-		/* master: 9 members (4 base + 3 process + get_start_ts + get_end_ts) */
 		NULL,
 		NULL,
 		NULL,
-		NULL,
-		NULL,
-#elif defined(WS_API_V46)
-		/* v4.6: 7 members (4 base + 3 process-related) */
-		NULL,
-		NULL,
-		NULL,
-#endif
-		/* v4.4 and earlier: only 4 members, no extra NULLs */
 	};
 
 	return epan_new(NULL, &funcs);
@@ -133,7 +105,6 @@ get_dissector_handle(const char *table, const char *target)
 
 	if (table != NULL && target != NULL)
 	{
-		/* search for handle, cannot use dissector_table_get_dissector_handle() cause it's using short-name, and I already used filter name in samples ;/ */
 		GSList *handle_list = dissector_table_get_dissector_handles(find_dissector_table(table));
 		while (handle_list)
 		{
@@ -156,13 +127,11 @@ get_dissector_handle(const char *table, const char *target)
 static void
 fuzz_prefs_apply(void)
 {
-	/* Turn off fragmentation for some protocols */
 	fuzzshark_pref_set("ip.defragment", "FALSE");
 	fuzzshark_pref_set("ipv6.defragment", "FALSE");
 	fuzzshark_pref_set("wlan.defragment", "FALSE");
 	fuzzshark_pref_set("tcp.desegment_tcp_streams", "FALSE");
 
-	/* Notify all registered modules that have had any of their preferences changed. */
 	prefs_apply_all();
 }
 
@@ -170,8 +139,6 @@ static int
 fuzz_init(int argc, char **argv)
 {
 	char                *configuration_init_error;
-
-
 	char                *err_msg = NULL;
 	e_prefs             *prefs_p;
 	int                  ret = EXIT_SUCCESS;
@@ -180,11 +147,6 @@ fuzz_init(int argc, char **argv)
 		LONGOPT_WSLOG
 		{0, 0, 0, 0 }
 	};
-#ifdef HAS_APPLICATION_FLAVOR
-	const struct file_extension_info* file_extensions;
-	unsigned num_extensions;
-	epan_app_data_t app_data;
-#endif
 
 	const char *fuzz_target =
 #if defined(FUZZ_DISSECTOR_TARGET)
@@ -204,18 +166,6 @@ fuzz_init(int argc, char **argv)
 #if !defined(FUZZ_DISSECTOR_TABLE) && !defined(FUZZ_DISSECTOR_TARGET)
 	const char *fuzz_table = getenv("FUZZSHARK_TABLE");
 
-#ifdef HAS_APPLICATION_FLAVOR
-	/* Future proof by zeroing out all data */
-	memset(&app_data, 0, sizeof(app_data));
-#endif
-
-	/*
-	 * Set the pogram name.
-	 *
-	 * XXX - yes, this isn't main(), but it still needs to be
-	 * set, as many Wireshark library routines depend on it
-	 * being set.
-	 */
 	g_set_prgname("oss-fuzzshark");
 
 	if (!fuzz_table && !fuzz_target) {
@@ -251,72 +201,31 @@ fuzz_init(int argc, char **argv)
 
 	dissector_handle_t fuzz_handle = NULL;
 
-	/* In oss-fuzz running environment g_get_home_dir() fails:
-	 * (process:1): GLib-WARNING **: getpwuid_r(): failed due to unknown user id (0)
-	 * (process:1): GLib-CRITICAL **: g_once_init_leave: assertion 'result != 0' failed
-	 *
-	 * Avoid GLib-CRITICAL by setting some XDG environment variables.
-	 */
-	g_setenv("XDG_CACHE_HOME", "/not/existing/directory", 0);  /* g_get_user_cache_dir() */
-	g_setenv("XDG_CONFIG_HOME", "/not/existing/directory", 0); /* g_get_user_config_dir() */
-	g_setenv("XDG_DATA_HOME", "/not/existing/directory", 0);   /* g_get_user_data_dir() */
+	g_setenv("XDG_CACHE_HOME", "/not/existing/directory", 0);
+	g_setenv("XDG_CONFIG_HOME", "/not/existing/directory", 0);
+	g_setenv("XDG_DATA_HOME", "/not/existing/directory", 0);
 
 	g_setenv("WIRESHARK_DEBUG_WMEM_OVERRIDE", "simple", 0);
 	g_setenv("G_SLICE", "always-malloc", 0);
 
 	cmdarg_err_init(stderr_cmdarg_err, stderr_cmdarg_err_cont);
 
-	/* Initialize log handler early so we can have proper logging during startup. */
-#if defined(HAS_APPLICATION_FLAVOR)
-	ws_log_init(vcmdarg_err, "Fuzzshark Debug Console");
-#elif defined(WS_API_V46)
 	ws_log_init(vcmdarg_err);
-#else
-	ws_log_init("fuzzshark", vcmdarg_err);
-#endif
 
-	/* Early logging command-line initialization. */
-#if defined(WS_API_V46) || defined(HAS_APPLICATION_FLAVOR)
 	ws_log_parse_args(&argc, argv, "v", long_options, vcmdarg_err, LOG_ARGS_NOEXIT);
-#else
-	ws_log_parse_args(&argc, argv, vcmdarg_err, LOG_ARGS_NOEXIT);
-#endif
 
 	ws_noisy("Finished log init and parsing command line log arguments");
 
-	/*
-	 * Get credential information for later use, and drop privileges
-	 * before doing anything else.
-	 * Let the user know if anything happened.
-	 */
 	init_process_policies();
-#if 0 /* disable setresgid(), it fails with -EINVAL https://github.com/google/oss-fuzz/pull/532#issuecomment-294515463 */
-	relinquish_special_privs_perm();
-#endif
 
-	/*
-	 * Attempt to get the pathname of the executable file.
-	 */
-#if defined(HAS_APPLICATION_FLAVOR)
-	configuration_init_error = configuration_init(argv[0], "wireshark");
-#elif defined(WS_API_V46)
 	configuration_init_error = configuration_init(argv[0]);
-#else
-	configuration_init_error = configuration_init(argv[0], "Wireshark");
-#endif
 	if (configuration_init_error != NULL) {
 		fprintf(stderr, "fuzzshark: Can't get pathname of oss-fuzzshark program: %s.\n", configuration_init_error);
 		g_free(configuration_init_error);
 	}
 
-	/* Initialize the version information. */
-#ifdef HAS_APPLICATION_FLAVOR
-	ws_init_version_info("OSS Fuzzshark", NULL, application_get_vcs_version_info,
-	    epan_gather_compile_info, epan_gather_runtime_info);
-#else
 	ws_init_version_info("OSS Fuzzshark",
 	    epan_gather_compile_info, epan_gather_runtime_info);
-#endif
 
 	init_report_failure_message("fuzzshark");
 
@@ -324,45 +233,17 @@ fuzz_init(int argc, char **argv)
 	timestamp_set_precision(TS_PREC_AUTO);
 	timestamp_set_seconds_type(TS_SECONDS_DEFAULT);
 
-	/*
-	 * Libwiretap must be initialized before libwireshark is, so that
-	 * dissection-time handlers for file-type-dependent blocks can
-	 * register using the file type/subtype value for the file type.
-	 */
-#ifdef HAS_APPLICATION_FLAVOR
-	application_file_extensions(&file_extensions, &num_extensions);
-	wtap_init(true, application_configuration_environment_prefix(), file_extensions, num_extensions);
-#else
 	wtap_init(true);
-#endif
 
-	/* Register all dissectors; we must do this before checking for the
-	   "-G" flag, as the "-G" flag dumps information registered by the
-	   dissectors, and we must do it before we read the preferences, in
-	   case any dissectors register preferences. */
-#ifdef HAS_APPLICATION_FLAVOR
-	app_data.env_var_prefix = application_configuration_environment_prefix();
-	app_data.col_fmt = application_columns();
-	app_data.num_cols = application_num_columns();
-	app_data.register_func = register_all_protocols;
-	app_data.handoff_func = register_all_protocol_handoffs;
-	if (!epan_init(NULL, NULL, false, &app_data))
-#else
 	if (!epan_init(NULL, NULL, false))
-#endif
 	{
 		ret = EPAN_INIT_FAIL;
 		goto clean_exit;
 	}
 
-	/* Load libwireshark settings from the current profile. */
 	prefs_p = epan_load_settings();
 
-#ifdef HAS_APPLICATION_FLAVOR
-	if (!color_filters_init(&err_msg, NULL, application_configuration_environment_prefix()))
-#else
 	if (!color_filters_init(&err_msg, NULL))
-#endif
 	{
 		fprintf(stderr, "%s\n", err_msg);
 		g_free(err_msg);
@@ -372,8 +253,6 @@ fuzz_init(int argc, char **argv)
 	{
 		const char *item = disabled_dissector_list[i];
 
-		/* XXX, need to think how to disallow chains like: IP -> .... -> IP,
-		 * best would be to disable dissector always, but allow it during initial call. */
 		if (fuzz_target == NULL || strcmp(fuzz_target, item))
 		{
 			fprintf(stderr, "oss-fuzzshark: disabling: %s\n", item);
@@ -383,7 +262,6 @@ fuzz_init(int argc, char **argv)
 
 	fuzz_prefs_apply();
 
-	/* Build the column format array */
 	build_column_format_array(&fuzz_cinfo, prefs_p->num_cols, true);
 
 #if defined(FUZZ_DISSECTOR_TABLE) && defined(FUZZ_DISSECTOR_TARGET)
@@ -443,24 +321,21 @@ LLVMFuzzerTestOneInput(const uint8_t *buf, size_t real_len)
 	wtap_rec rec;
 	frame_data fdlocal;
 
-	wtap_rec_init(&rec, len);
-
-	/* wtap_setup_packet_rec(&rec, WTAP_ENCAP_ETHERNET); */
 	static int encap_initialized = 0;
 	if (!encap_initialized) {
 		wirefuzz_init_encap();
 		encap_initialized = 1;
 	}
+
+	wtap_rec_init(&rec, len);
 	wtap_setup_packet_rec(&rec, wirefuzz_encap_type);
 	rec.rec_header.packet_header.caplen = len;
 	rec.rec_header.packet_header.len = len;
-
-	rec.presence_flags = WTAP_HAS_TS | WTAP_HAS_CAP_LEN; /* most common flags... */
+	rec.presence_flags = WTAP_HAS_TS | WTAP_HAS_CAP_LEN;
 
 	ws_buffer_append(&rec.data, buf, real_len);
 
 	frame_data_init(&fdlocal, ++framenum, &rec, /* offset */ 0, /* cum_bytes */ 0);
-	/* frame_data_set_before_dissect() not needed */
 	epan_dissect_run(edt, WTAP_FILE_TYPE_SUBTYPE_UNKNOWN, &rec, &fdlocal, NULL /* &fuzz_cinfo */);
 	frame_data_destroy(&fdlocal);
 

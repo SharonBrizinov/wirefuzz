@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 ARG WIRESHARK_VERSION=master
+ARG FUZZSHARK_VARIANT=master
 ARG NPROC=0
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -27,8 +28,9 @@ RUN git clone --no-checkout https://gitlab.com/wireshark/wireshark.git /opt/wire
     && git checkout ${WIRESHARK_VERSION} \
     && git submodule update --init --depth=1
 
-# Replace fuzzshark.c with our version that supports WIREFUZZ_ENCAP env var
-COPY docker/fuzzshark.c /opt/wireshark/fuzz/fuzzshark.c
+# Replace fuzzshark.c with the version matching the target Wireshark API.
+# Variants: master (dev/HEAD), v4.6 (v4.6.x), v4.4 (v4.4.x and earlier)
+COPY docker/fuzzshark_${FUZZSHARK_VARIANT}.c /opt/wireshark/fuzz/fuzzshark.c
 
 # Build Wireshark with libfuzzer + ASAN + UBSAN
 # Only build fuzzshark target (not all of Wireshark)

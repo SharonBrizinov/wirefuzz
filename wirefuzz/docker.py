@@ -1,5 +1,6 @@
 """Docker image build and container management via subprocess."""
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +15,30 @@ from wirefuzz.exceptions import (
     DockerNotFoundError,
     DockerRunError,
 )
+
+
+def _fuzzshark_variant(version: str) -> str:
+    """Map a Wireshark version string to the matching fuzzshark_*.c variant.
+
+    Returns one of: "master", "v4.6", "v4.4".
+    """
+    if version in ("master", "main"):
+        return "master"
+
+    # Extract major.minor from tags like "v4.6.4", "v4.4.0", "4.6.3", etc.
+    m = re.match(r"v?(\d+)\.(\d+)", version)
+    if m:
+        major, minor = int(m.group(1)), int(m.group(2))
+        if major >= 5:
+            return "master"
+        if major == 4 and minor >= 7:
+            return "master"
+        if major == 4 and minor == 6:
+            return "v4.6"
+        return "v4.4"
+
+    # Unrecognised (commit hash, branch name) — default to master
+    return "master"
 
 
 def _run_docker(args: List[str], capture: bool = True,
@@ -63,10 +88,14 @@ def build_image(version: str, no_cache: bool = False, jobs: int = 0,
     tag = CONFIG.image_tag(version)
     project_root = Path(__file__).parent.parent
 
+    variant = _fuzzshark_variant(version)
+    console.print(f"[dim]Using fuzzshark variant: {variant}[/dim]")
+
     cmd = [
         "docker", "build",
         "--tag", tag,
         "--build-arg", f"WIRESHARK_VERSION={version}",
+        "--build-arg", f"FUZZSHARK_VARIANT={variant}",
         "--build-arg", f"NPROC={jobs}",
     ]
 
