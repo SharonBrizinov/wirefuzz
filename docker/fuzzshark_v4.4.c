@@ -56,27 +56,21 @@
 #define LONGOPT_WSLOG
 #endif
 
-/* stderr_cmdarg_err / stderr_cmdarg_err_cont are convenience functions
- * added after v4.4.  Provide minimal local versions. */
+/* cmdarg_err_init() in v4.4 expects va_list-style callbacks, not variadic.
+ * Provide local versions matching the expected signature. */
 static void
-stderr_cmdarg_err(const char *msg_format, ...)
+stderr_cmdarg_err(const char *msg_format, va_list ap)
 {
-	va_list ap;
-	va_start(ap, msg_format);
 	fprintf(stderr, "fuzzshark: ");
 	vfprintf(stderr, msg_format, ap);
 	fprintf(stderr, "\n");
-	va_end(ap);
 }
 
 static void
-stderr_cmdarg_err_cont(const char *msg_format, ...)
+stderr_cmdarg_err_cont(const char *msg_format, va_list ap)
 {
-	va_list ap;
-	va_start(ap, msg_format);
 	vfprintf(stderr, msg_format, ap);
 	fprintf(stderr, "\n");
-	va_end(ap);
 }
 
 #include "FuzzerInterface.h"
@@ -172,7 +166,7 @@ fuzz_init(int argc, char **argv)
 	e_prefs             *prefs_p;
 	int                  ret = EXIT_SUCCESS;
 	size_t               i;
-	static const struct ws_option long_options[] = {
+	static const struct ws_option long_options[] _U_ = {
 		LONGOPT_WSLOG
 		{0, 0, 0, 0 }
 	};
@@ -365,7 +359,7 @@ LLVMFuzzerTestOneInput(const uint8_t *buf, size_t real_len)
 
 	Buffer pkt_buf;
 	ws_buffer_init(&pkt_buf, len);
-	ws_buffer_append(&pkt_buf, buf, real_len);
+	ws_buffer_append(&pkt_buf, (uint8_t *)buf, real_len);
 
 	frame_data_init(&fdlocal, ++framenum, &rec, /* offset */ 0, /* cum_bytes */ 0);
 	tvbuff_t *tvb = tvb_new_real_data(ws_buffer_start_ptr(&pkt_buf), len, len);
