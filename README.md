@@ -235,16 +235,23 @@ wirefuzz corpus prepare -p capture.pcapng -e 33 -o ./corpus_docsis/
 
 Parses pcap/pcapng files, filters by encap type, deduplicates by SHA-256, and writes each unique packet payload as a raw file.
 
-#### corpus merge
+#### corpus merge_pcap
 
-Merge matching packets into a single pcapng file.
+Merge matching packets from PCAPs into a single pcapng file.
 
 ```bash
-wirefuzz corpus merge -p ./captures/ -e DOCSIS -o docsis_merged.pcapng
-wirefuzz corpus merge -p ./raw_corpus/ -e ETHERNET -o merged.pcapng  # from raw files
+wirefuzz corpus merge_pcap -p ./captures/ -e DOCSIS -o docsis_merged.pcapng
+wirefuzz corpus merge_pcap -p ./pcaps/ -o merged.pcapng  # interactive encap picker
 ```
 
-Accepts either pcap files or raw corpus directories as input.
+#### corpus merge_seed
+
+Merge raw seed/corpus files into a single pcapng file.
+
+```bash
+wirefuzz corpus merge_seed -d ./corpus/ -e ETHERNET -o merged.pcapng
+wirefuzz corpus merge_seed -d ./raw_corpus/ -o merged.pcapng  # interactive encap picker
+```
 
 ### bisect
 

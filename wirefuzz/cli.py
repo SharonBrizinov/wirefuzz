@@ -510,7 +510,7 @@ def corpus_prepare(ctx, pcap_path, encap_str, output_dir):
         sys.exit(1)
 
 
-@corpus.command(name="merge")
+@corpus.command(name="merge_pcap")
 @click.option("-p", "--pcap", "pcap_path", required=True,
               type=click.Path(exists=True),
               help="PCAP file or directory to merge from.")
@@ -520,8 +520,8 @@ def corpus_prepare(ctx, pcap_path, encap_str, output_dir):
               type=click.Path(),
               help="Output .pcapng file path.")
 @click.pass_context
-def corpus_merge(ctx, pcap_path, encap_str, output_path):
-    """Merge all matching packets from PCAPs into a single pcapng file.
+def corpus_merge_pcap(ctx, pcap_path, encap_str, output_path):
+    """Merge matching packets from PCAPs into a single pcapng file.
 
     Extracts packets of the given encap type, deduplicates by SHA-256,
     and writes them into one pcapng file. Useful for building a clean
@@ -529,8 +529,8 @@ def corpus_merge(ctx, pcap_path, encap_str, output_path):
 
     \b
     Examples:
-      wirefuzz corpus merge -p ./pcaps/ -e 33 -o docsis_merged.pcapng
-      wirefuzz corpus merge -p ./pcaps/ -o merged.pcapng   # interactive encap picker
+      wirefuzz corpus merge_pcap -p ./pcaps/ -e 33 -o docsis_merged.pcapng
+      wirefuzz corpus merge_pcap -p ./pcaps/ -o merged.pcapng   # interactive encap picker
     """
     from wirefuzz.corpus import extract_by_encap, find_pcap_files, probe_encaps, write_pcapng
     from wirefuzz.encaps import ENCAP_REGISTRY, _build_wtap_to_dlt, get_encap, pick_encap_interactive
@@ -541,14 +541,8 @@ def corpus_merge(ctx, pcap_path, encap_str, output_path):
         input_path = Path(pcap_path).resolve()
         pcap_files = find_pcap_files(input_path)
 
-        raw_files = []
-        if not pcap_files and input_path.is_dir():
-            raw_files = sorted(f for f in input_path.rglob("*") if f.is_file())
-
-        is_raw_corpus = bool(raw_files) and not pcap_files
-
-        if not pcap_files and not raw_files:
-            console.print(f"[red]Error:[/red] No pcap or corpus files found at '{pcap_path}'")
+        if not pcap_files:
+            console.print(f"[red]Error:[/red] No pcap files found at '{pcap_path}'")
             sys.exit(1)
 
         # Encap selection
@@ -558,68 +552,114 @@ def corpus_merge(ctx, pcap_path, encap_str, output_path):
                 console.print(f"[red]Error:[/red] Unknown encap '{encap_str}'")
                 sys.exit(1)
         else:
-            if not is_raw_corpus:
-                # Probe pcaps first
-                console.print(f"\n  Probing {len(pcap_files)} pcap file(s) (first 1000 packets)...")
-                dist = probe_encaps(pcap_files, max_packets=1000)
-                if dist:
-                    wtap_to_dlt = _build_wtap_to_dlt()
-                    table = RichTable(show_header=True, header_style="bold", box=None, padding=(0, 2))
-                    table.add_column("WTAP", justify="right", style="cyan")
-                    table.add_column("DLT", justify="right", style="dim")
-                    table.add_column("Name")
-                    table.add_column("Full name", style="dim")
-                    table.add_column("Packets", justify="right", style="green")
-                    total_probed = sum(dist.values())
-                    for wtap_id, count in dist.items():
-                        e = ENCAP_REGISTRY.get(wtap_id)
-                        dlt = wtap_to_dlt.get(wtap_id)
-                        table.add_row(
-                            str(wtap_id),
-                            str(dlt) if dlt is not None else "—",
-                            e.name if e else "unknown",
-                            e.full_name if e else "",
-                            f"{count} ({count / total_probed * 100:.0f}%)",
-                        )
-                    console.print()
-                    console.print(table)
-                    console.print()
-            else:
-                console.print(f"\n  [dim]Raw corpus directory — encap type needed to write pcapng header.[/dim]")
+            # Probe pcaps first
+            console.print(f"\n  Probing {len(pcap_files)} pcap file(s) (first 1000 packets)...")
+            dist = probe_encaps(pcap_files, max_packets=1000)
+            if dist:
+                wtap_to_dlt = _build_wtap_to_dlt()
+                table = RichTable(show_header=True, header_style="bold", box=None, padding=(0, 2))
+                table.add_column("WTAP", justify="right", style="cyan")
+                table.add_column("DLT", justify="right", style="dim")
+                table.add_column("Name")
+                table.add_column("Full name", style="dim")
+                table.add_column("Packets", justify="right", style="green")
+                total_probed = sum(dist.values())
+                for wtap_id, count in dist.items():
+                    e = ENCAP_REGISTRY.get(wtap_id)
+                    dlt = wtap_to_dlt.get(wtap_id)
+                    table.add_row(
+                        str(wtap_id),
+                        str(dlt) if dlt is not None else "—",
+                        e.name if e else "unknown",
+                        e.full_name if e else "",
+                        f"{count} ({count / total_probed * 100:.0f}%)",
+                    )
+                console.print()
+                console.print(table)
+                console.print()
             encap = pick_encap_interactive(console=console)
 
         console.print(f"\n  Encap: [bold]{encap.name}[/bold] (WTAP {encap.id}) - {encap.full_name}")
-
-        if is_raw_corpus:
-            # Input is already extracted raw payloads — wrap directly into pcapng
-            console.print(f"  Source: raw corpus ({len(raw_files)} files)")
-            payloads = [f.read_bytes() for f in raw_files if f.stat().st_size > 0]
+        console.print(f"  Files: {len(pcap_files)}")
+        with tempfile.TemporaryDirectory(prefix="wirefuzz_merge_") as tmp:
+            stats = extract_by_encap(
+                pcap_paths=pcap_files,
+                target_encap=encap,
+                output_dir=Path(tmp),
+                console=console,
+            )
+            if stats.unique_packets == 0:
+                console.print(f"\n[yellow]Warning:[/yellow] No packets matched encap {encap.name} ({encap.id}).")
+                sys.exit(0)
+            payloads = [f.read_bytes() for f in sorted(Path(tmp).iterdir()) if f.is_file()]
             out = Path(output_path)
             written = write_pcapng(payloads, encap.id, out)
-            console.print(f"\n  [bold]Results:[/bold]")
-            console.print(f"    Files read:  {len(raw_files)}")
-            console.print(f"    Written:     {written} packets → {output_path}")
+        console.print(f"\n  [bold]Results:[/bold]")
+        console.print(f"    Total packets:   {stats.total_packets}")
+        console.print(f"    Matched:         {stats.matched_packets}")
+        console.print(f"    Unique:          {stats.unique_packets}")
+        console.print(f"    Written:         {written} packets → {output_path}")
+        console.print()
+
+    except WirefuzzError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        sys.exit(1)
+
+
+@corpus.command(name="merge_seed")
+@click.option("-d", "--dir", "seed_dir", required=True,
+              type=click.Path(exists=True),
+              help="Directory containing raw seed/corpus files.")
+@click.option("-e", "--encap", "encap_str", default=None,
+              help="Encapsulation type (ID or name). Interactive if omitted.")
+@click.option("-o", "--output", "output_path", required=True,
+              type=click.Path(),
+              help="Output .pcapng file path.")
+@click.pass_context
+def corpus_merge_seed(ctx, seed_dir, encap_str, output_path):
+    """Merge raw seed/corpus files into a single pcapng file.
+
+    Reads raw payload files (e.g. from a fuzzer corpus directory),
+    wraps each one as a packet with the given encap header, and writes
+    them into one pcapng file.
+
+    \b
+    Examples:
+      wirefuzz corpus merge_seed -d ./corpus/ -e 33 -o docsis_merged.pcapng
+      wirefuzz corpus merge_seed -d ./corpus/ -o merged.pcapng   # interactive encap picker
+    """
+    from wirefuzz.corpus import write_pcapng
+    from wirefuzz.encaps import get_encap, pick_encap_interactive
+
+    try:
+        input_path = Path(seed_dir).resolve()
+        if not input_path.is_dir():
+            console.print(f"[red]Error:[/red] '{seed_dir}' is not a directory")
+            sys.exit(1)
+
+        raw_files = sorted(f for f in input_path.rglob("*") if f.is_file())
+        if not raw_files:
+            console.print(f"[red]Error:[/red] No files found in '{seed_dir}'")
+            sys.exit(1)
+
+        # Encap selection
+        if encap_str:
+            encap = get_encap(encap_str)
+            if encap is None:
+                console.print(f"[red]Error:[/red] Unknown encap '{encap_str}'")
+                sys.exit(1)
         else:
-            # Input is pcap files — extract then write
-            console.print(f"  Files: {len(pcap_files)}")
-            with tempfile.TemporaryDirectory(prefix="wirefuzz_merge_") as tmp:
-                stats = extract_by_encap(
-                    pcap_paths=pcap_files,
-                    target_encap=encap,
-                    output_dir=Path(tmp),
-                    console=console,
-                )
-                if stats.unique_packets == 0:
-                    console.print(f"\n[yellow]Warning:[/yellow] No packets matched encap {encap.name} ({encap.id}).")
-                    sys.exit(0)
-                payloads = [f.read_bytes() for f in sorted(Path(tmp).iterdir()) if f.is_file()]
-                out = Path(output_path)
-                written = write_pcapng(payloads, encap.id, out)
-            console.print(f"\n  [bold]Results:[/bold]")
-            console.print(f"    Total packets:   {stats.total_packets}")
-            console.print(f"    Matched:         {stats.matched_packets}")
-            console.print(f"    Unique:          {stats.unique_packets}")
-            console.print(f"    Written:         {written} packets → {output_path}")
+            console.print(f"\n  [dim]Raw corpus directory — encap type needed to write pcapng header.[/dim]")
+            encap = pick_encap_interactive(console=console)
+
+        console.print(f"\n  Encap: [bold]{encap.name}[/bold] (WTAP {encap.id}) - {encap.full_name}")
+        console.print(f"  Source: raw corpus ({len(raw_files)} files)")
+        payloads = [f.read_bytes() for f in raw_files if f.stat().st_size > 0]
+        out = Path(output_path)
+        written = write_pcapng(payloads, encap.id, out)
+        console.print(f"\n  [bold]Results:[/bold]")
+        console.print(f"    Files read:  {len(raw_files)}")
+        console.print(f"    Written:     {written} packets → {output_path}")
         console.print()
 
     except WirefuzzError as e:
